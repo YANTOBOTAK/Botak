@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birthday Magic</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-tr from-purple-900 via-indigo-800 to-pink-900 min-h-screen flex items-center justify-center overflow-hidden">
+    <div id="app" class="relative w-full max-w-md">
+        <div class="bg-white/10 backdrop-blur-2xl rounded-3xl p-8 shadow-2xl relative z-10 transform transition-all duration-500 hover:scale-105">
+            <div id="stage" class="relative">
+                <div id="balloons" class="absolute top-0 left-0 right-0 h-64 overflow-hidden pointer-events-none">
+                    <!-- Balloon animations will be dynamically added here -->
+                </div>
+                
+                <div class="text-center mb-8">
+                    <h1 id="title" class="text-5xl font-bold text-white tracking-tight opacity-0 transform translate-y-10 transition-all duration-1000">
+                        Birthday Surprise
+                    </h1>
+                </div>
+
+                <div id="interactive-zone" class="space-y-6">
+                    <button id="startBtn" class="w-full bg-pink-600 text-white py-4 rounded-full text-xl font-semibold hover:bg-pink-700 transition-colors duration-300 relative overflow-hidden group">
+                        <span class="relative z-10">Open Surprise</span>
+                        <span class="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                    </button>
+                </div>
+
+                <div id="message-zone" class="mt-6 text-center opacity-0 transform translate-y-10 transition-all duration-1000">
+                    <h2 id="dynamicMessage" class="text-3xl font-bold text-white"></h2>
+                </div>
+            </div>
+        </div>
+
+        <canvas id="particleCanvas" class="fixed inset-0 z-0 pointer-events-none"></canvas>
+    </div>
+
+    <script>
+        const app = {
+            init() {
+                this.canvas = document.getElementById('particleCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.particles = [];
+                this.setupCanvas();
+                this.bindEvents();
+            },
+
+            setupCanvas() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+                window.addEventListener('resize', () => this.resizeCanvas());
+            },
+
+            resizeCanvas() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            },
+
+            bindEvents() {
+                document.getElementById('startBtn').addEventListener('click', () => this.triggerSurprise());
+            },
+
+            triggerSurprise() {
+                this.animateTitle();
+                this.createParticles();
+                this.showMessage();
+                this.playSound();
+                document.getElementById('startBtn').classList.add('hidden');
+            },
+
+            animateTitle() {
+                const title = document.getElementById('title');
+                title.classList.remove('opacity-0', 'translate-y-10');
+            },
+
+            createParticles() {
+                const particleCount = 200;
+                for (let i = 0; i < particleCount; i++) {
+                    this.particles.push({
+                        x: Math.random() * this.canvas.width,
+                        y: this.canvas.height,
+                        radius: Math.random() * 5 + 2,
+                        color: `hsl(${Math.random() * 360}, 70%, 50%)`,
+                        speed: Math.random() * 3 + 1,
+                        angle: -Math.PI / 2 + (Math.random() - 0.5)
+                    });
+                }
+                this.animateParticles();
+            },
+
+            animateParticles() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                this.particles.forEach((p, index) => {
+                    p.x += Math.cos(p.angle) * p.speed;
+                    p.y += Math.sin(p.angle) * p.speed;
+
+                    this.ctx.beginPath();
+                    this.ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    this.ctx.fillStyle = p.color;
+                    this.ctx.fill();
+
+                    if (p.y < 0) {
+                        this.particles.splice(index, 1);
+                    }
+                });
+
+                if (this.particles.length > 0) {
+                    requestAnimationFrame(() => this.animateParticles());
+                }
+            },
+
+            showMessage() {
+                const messages = [
+                    'Happy Birthday, Legend! 🎉',
+                    'Another Epic Year Begins! 🚀',
+                    'Celebration Mode: Activated! 🎂',
+                    'Best Day Ever! 🎈'
+                ];
+
+                const messageZone = document.getElementById('message-zone');
+                const dynamicMessage = document.getElementById('dynamicMessage');
+                
+                dynamicMessage.textContent = messages[Math.floor(Math.random() * messages.length)];
+                
+                messageZone.classList.remove('opacity-0', 'translate-y-10');
+            },
+
+            playSound() {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+
+                    oscillator.start();
+                    oscillator.stop(audioContext.currentTime + 1);
+                } catch (error) {
+                    console.error("Sound generation failed:", error);
+                }
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => app.init());
+    </script>
+</body>
+</html>
